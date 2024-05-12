@@ -14,7 +14,7 @@ This script defines a class called `EphemerisManager` for retrieving and process
  It organizes data into DataFrames, allows filtering by satellite ID and timestamp, and handles decompression of files. 
 The main section demonstrates usage by retrieving ephemeris data for specific satellites at a given timestamp.
 """""
-#ofir's check2
+
 class EphemerisManager():
     def __init__(self, data_directory=os.path.join(os.getcwd(), 'data', 'ephemeris')):
         self.data_directory = data_directory
