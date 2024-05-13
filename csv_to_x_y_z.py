@@ -42,10 +42,14 @@ def compute_position(gps_time):
     while True:
         print("Iteration:", iteration)
         # Compute pseudo-ranges
-        pseudo_ranges = np.sqrt((filtered_data['Sat.X'] - x) ** 2 +
-                                (filtered_data['Sat.Y'] - y) ** 2 +
-                                (filtered_data['Sat.Z'] - z) ** 2)
-        print("Pseudo-ranges:", pseudo_ranges)
+        pseudo_ranges = np.sqrt((filtered_data['Sat.X'] - x)**2 +
+                                (filtered_data['Sat.Y'] - y)**2 +
+                                (filtered_data['Sat.Z'] - z)**2)
+
+        # Scale down the pseudo-ranges to prevent overflow
+        max_pseudo_range = pseudo_ranges.max()
+        scale_factor = max_pseudo_range / 1e9  # Scale down to a range of 1e9
+        pseudo_ranges /= scale_factor
 
         # Check for NaN values in pseudo-ranges
         if pseudo_ranges.isnull().any():
@@ -54,16 +58,16 @@ def compute_position(gps_time):
 
         # Compute weights
         weights = weight_func(filtered_data['CN0'])
-        print("Weights:", weights)
 
         # Compute weighted least squares solution
         A = np.column_stack((np.ones(num_satellites), -np.ones(num_satellites), -np.ones(num_satellites)))
         b = pseudo_ranges.values * c  # Convert to numpy array for indexing
-        print("A:", A)
-        print("b:", b)
-        print("Weights:", weights.values)
         x_new, y_new, z_new = np.linalg.lstsq(A * weights.values[:, np.newaxis], b * weights.values, rcond=None)[0]
-        print("New estimates (x, y, z):", x_new, y_new, z_new)
+
+        # Undo scaling on the estimates
+        x_new *= scale_factor
+        y_new *= scale_factor
+        z_new *= scale_factor
 
         # Check convergence
         if abs(x_new - x) < epsilon and abs(y_new - y) < epsilon and abs(z_new - z) < epsilon:
@@ -77,7 +81,6 @@ def compute_position(gps_time):
         iteration += 1
 
     return x, y, z
-
 
 # Choose a GPS time from the data for testing
 test_gps_time = data['GPS Time'].iloc[0]  # Use the first GPS time from the data
