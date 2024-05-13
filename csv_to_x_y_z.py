@@ -82,6 +82,6 @@ def compute_position(gps_time):
 # Choose a GPS time from the data for testing
 test_gps_time = data['GPS Time'].iloc[0]  # Use the first GPS time from the data
 
-# Compute position for the chosen GPS time
+# Compute position for the chosen GPS timee
 x, y, z = compute_position(test_gps_time)
 print("Position (X, Y, Z) for GPS time", test_gps_time, ":", x, y, z)
