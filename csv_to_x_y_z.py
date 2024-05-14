@@ -114,22 +114,3 @@ def compute_receiver_pos(sat_data):
             positions[gps_time] = receiver_pos
 
     return positions
-
-
-# Get the current working directory
-current_directory = os.getcwd()
-
-# Construct the file path, Change the file name to the wanted csv
-f_name = 'gnss_log_2024_04_13_19_51_17_output.csv'
-file_path = os.path.join(current_directory, f_name)
-
-# Read the satellite data from the CSV file
-satellite_data = read_csv_sat_data(file_path)
-
-# Compute the receiver positions for all GPS times
-receiver_pos = compute_receiver_pos(satellite_data)
-
-# Print the receiver positions for each GPS time
-for gps_time, receiver_position in receiver_pos.items():
-    print(f"GPS Time: {gps_time}")
-    print(f"Receiver Position (X, Y, Z): {receiver_position}\n")
