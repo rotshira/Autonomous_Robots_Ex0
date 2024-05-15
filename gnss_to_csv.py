@@ -120,7 +120,7 @@ def calculate_satellite_position(ephemeris, transmit_time):
     return sv_position
 
 
-def parse_gnss_log(input_filepath):
+def parse_gnss_log(input_filepath, output_path):
     columns_to_keep = ['UnixTime', 'SvName', 'Sat.X', 'Sat.Y', 'Sat.Z', 'Pseudo-Range', 'Cn0DbHz']
     rename_columns = {'UnixTime': 'GPS time', 'SvName': 'SatPRN (ID)', 'Cn0DbHz': 'CN0'}
     unparsed_measurements = read_data(input_filepath)
@@ -158,6 +158,7 @@ def parse_gnss_log(input_filepath):
                 })
 
     csv_df = pd.DataFrame(csv_output)
+    csv_df.to_csv(output_path + '.csv', index=False)
     return csv_df
 
 
