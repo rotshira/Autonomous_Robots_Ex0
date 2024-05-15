@@ -1,74 +1,125 @@
 import unittest
 import csv
+from io import StringIO
+from unittest.mock import patch
+import numpy as np
+import pandas as pd
 
-from csv_to_x_y_z import read_csv_sat_data, receiver_pos_comp
+from solution import (
+    convert_to_geodetic,
+    trilateration,
+    calculate_locations,
+    export_to_kml,
+)
+
+class Test(unittest.TestCase):
+    class TestConvertToGeodetic(unittest.TestCase):
+        def test_convert_to_geodetic(self):
+
+            # Example at equator, prime meridian, sea level
+            x, y, z = 6378137.0, 0, 0
+            lat, lon, alt = convert_to_geodetic(x, y, z)
+            self.assertAlmostEqual(lat, 0.0)
+            self.assertAlmostEqual(lon, 0.0)
+            self.assertAlmostEqual(alt, 0.0)
+
+            # Example at north pole, sea level
+            x, y, z = 0, 0, 6356752.3142
+            lat, lon, alt = convert_to_geodetic(x, y, z)
+            self.assertAlmostEqual(lat, 90.0)
+            self.assertAlmostEqual(lon, 0.0)
+            self.assertAlmostEqual(alt, 0.0)
+
+            # Example at south pole, 10,000 meters altitude
+            x, y, z = 0, 0, -6356752.3142 + 10000
+            lat, lon, alt = convert_to_geodetic(x, y, z)
+            self.assertAlmostEqual(lat, -90.0)
+            self.assertAlmostEqual(lon, 0.0)
+            self.assertAlmostEqual(alt, 10000.0)
+
+            # Example at Greenwich meridian, sea level
+            x, y, z = 0, 6378137.0, 0
+            lat, lon, alt = convert_to_geodetic(x, y, z)
+            self.assertAlmostEqual(lat, 0.0)
+            self.assertAlmostEqual(lon, 0.0)
+            self.assertAlmostEqual(alt, 0.0)
 
 
-class TestReadCsvSatData(unittest.TestCase):
-    # Define a sample CSV file content for testing
-    SAMPLE_CSV_CONTENT = [
-        ['PRN', 'X', 'Y', 'Z', 'Signal_Strength'],
-        ['1', '10.0', '20.0', '30.0', 'Strong'],
-        ['2', '15.0', '25.0', '35.0', 'Weak'],
-        ['3', '8.0', '18.0', '28.0', 'Medium']
-    ]
-
-    def setUp(self):
-        # Write sample CSV content to a temporary file for testing
-        with open('test_sat_data.csv', 'w', newline='') as csv_file:
-            writer = csv.writer(csv_file)
-            writer.writerows(self.SAMPLE_CSV_CONTENT)
-
-    def tearDown(self):
-        # Remove the temporary file after testing
-        import os
-        os.remove('test_sat_data.csv')
-
-    def test_read_csv_sat_data(self):
-        # Test reading the sample CSV file
-        filename = 'test_sat_data.csv'
-        expected_sat_data = [
-            ['1', '10.0', '20.0', '30.0', 'Strong'],
-            ['2', '15.0', '25.0', '35.0', 'Weak'],
-            ['3', '8.0', '18.0', '28.0', 'Medium']
-        ]
-        actual_sat_data = read_csv_sat_data(filename)
-        self.assertEqual(actual_sat_data, expected_sat_data)
-
-    def test_read_csv_sat_data_empty_file(self):
-        # Test reading an empty CSV file
-        filename = 'empty_sat_data.csv'
-        open(filename, 'a').close()  # Create an empty file
-        expected_sat_data = []
-        actual_sat_data = read_csv_sat_data(filename)
-        self.assertEqual(actual_sat_data, expected_sat_data)
-
-    def test_receiver_pos_comp(self):
-        # Sample satellite data
-        sample_sat_data = [
-            ['1', '10.0', '20.0', '30.0'],
-            ['2', '15.0', '25.0', '35.0'],
-            ['3', '8.0', '18.0', '28.0'],
-            ['4', '12.0', '22.0', '32.0']
-        ]
-        # GPS time
-        gps_time = '123456.789'
+    def test_trilateration(self):
+        # Define sample data with non-singular matrix
+        sat_positions = np.array([[0, 0, 0], [1, 1, 0], [1, 0, 1]])
+        measured_pr = np.array([0, np.sqrt(2), np.sqrt(2)])
+        initial_pos = np.array([0.5, 0.5, 0.5])
+        initial_bias = 0
 
         # Call the function
-        receiver_pos = receiver_pos_comp(sample_sat_data, gps_time)
+        result = trilateration(sat_positions, measured_pr, initial_pos, initial_bias)
 
-        # Assert that the result is not None
-        self.assertIsNotNone(receiver_pos)
+        # Check if the result has the expected shape
+        self.assertEqual(len(result), 6)
 
-        # Assert that the result is a tuple
-        self.assertIsInstance(receiver_pos, tuple)
+    class TestCalculateLocations(unittest.TestCase):
+        def test_calculate_locations(self):
+            # Example input data
+            measurements = pd.DataFrame({
+                'GPS time': ['2024-05-15T12:00:00', '2024-05-15T12:00:00', '2024-05-15T12:00:00'],
+                'Sat.X': [0, 1, 2],
+                'Sat.Y': [0, 1, 2],
+                'Sat.Z': [0, 1, 2],
+                'Pseudo-Range': [0, 1.732, 3.464],  # sqrt(3), 2*sqrt(3)
+            })
 
-        # Assert that the result contains three elements (x, y, z)
-        self.assertEqual(len(receiver_pos), 3)
+            # Calculate locations
+            result_coords = calculate_locations(measurements)
 
-        # Assert that the result elements are of type float
-        self.assertTrue(all(isinstance(coord, float) for coord in receiver_pos))
+            # Test if the result is a dictionary
+            self.assertIsInstance(result_coords, dict)
 
+            # Test if the expected number of entries is generated
+            self.assertEqual(len(result_coords), 1)
+
+            # Test if the coordinates are calculated correctly
+            expected_coords = {
+                '2024-05-15T12:00:00': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # Since all satellites are at the same position
+            }
+            self.assertDictEqual(result_coords, expected_coords)
+
+    def test_calculate_locations2(self):
+        # Define sample data
+        measurements = pd.DataFrame({
+            'GPS time': ['2024-05-15T10:00:00', '2024-05-15T10:00:00', '2024-05-15T10:00:00'],
+            'Sat.X': [0, 1, 2],
+            'Sat.Y': [0, 1, 2],
+            'Sat.Z': [0, 1, 2],
+            'Pseudo-Range': [0, np.sqrt(3), 2 * np.sqrt(3)]
+        })
+
+        # Call the function
+        result = calculate_locations(measurements)
+
+        # Check if the result is a dictionary
+        self.assertIsInstance(result, dict)
+
+        # Check if the result contains the expected keys
+        expected_keys = ['2024-05-15T10:00:00']
+        self.assertEqual(list(result.keys()), expected_keys)
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_export_to_kml(self, mock_stdout):
+        # Define sample coordinates and output filepath
+        coordinates = {
+            '2024-05-15 14:00:00': (0, 0, 0, 0, 0, 0),
+            '2024-05-15 14:05:00': (10, 10, 10, 10, 10, 10),
+            '2024-05-15 14:10:00': (20, 20, 20, 20, 20, 20),
+        }
+        output_filepath = 'test_output.kml'
+
+        # Call the function
+        export_to_kml(coordinates, output_filepath)
+
+        # Verify the output
+        expected_output = f"KML file saved to: {output_filepath}\n"
+        self.assertEqual(mock_stdout.getvalue(), expected_output)
 
 if __name__ == '__main__':
     unittest.main()
