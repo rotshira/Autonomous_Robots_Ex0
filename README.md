@@ -1,15 +1,46 @@
-# GNSS Raw Mesurments
-This assignment focuses on the basic principles of GNSS, in particular, you are asked to implement a naive positioning algorithm based on RMS (Root Mean Square) of selected (i.e., weighted) pseudo-ranges.
+# GNSS Raw Measurements
 
-1 ) Get to know the basic concepts of GNSS in particular, the notion of pseudo-ranges, see Presentation, GNSS Raw Measurements, and android GnssLogger App.
+This project focuses on the basic principles of GNSS (Global Navigation Satellite System). You will implement a naive positioning algorithm based on the RMS (Root Mean Square) of selected (i.e., weighted) pseudo-ranges.
 
-2 ) Download the following dataset, go over the data, and design a parsing tool that converts the log file to a csv (txt) file with the following format: 
-GPS time, SatPRN (ID), Sat.X, Sat.Y, Sat.Z, Pseudo-Range, CN0, Doppler (nice to have), See this link for a complete explanation + python code for solving most of this assignment.
-Note: the sat position should be in ECEF coordinates.
+## Prerequisites
 
-3 ) Given a csv file (as in the above format) Implement a Positioning Algorithm which for a Given GPS time, computes the appropriate positioning (in X,Y,Z coordinates). 
-Your are expected to implement an iterative numerical minimal RMS algorithm on a weighted set of SatPRNs. Implement a converting method from X,Y,Z to Lat, Lon, Alt (see wiki page)
+Ensure you have Python installed on your system. This project requires Python 3.6 or later.
 
-4 ) Integrate the above tasks into a complete solution that receives a Raw Measurements GNSS (log) file and computes two output files: (i) KML file (see time and animation) with the computed path.
-(ii) CSV file as in (2) with the following additional columns: Pos.X, Pos.Y, Pos,Z, Lat, Lon, Alt Perform a testing on the given dataset and add your own data files.
-Conclude your work as a GitHub repo - including a detailed readme with “how to run”
+## Setup
+
+1. Clone the repository or download the project files to your local machine.
+
+2. Install the necessary packages using the provided `requirements.txt` file. Open your terminal and run:
+    ```sh
+    pip install -r requirements.txt
+    ```
+
+## Usage
+
+To process the GNSS data and generate a KML file, follow these steps:
+
+1. Open your terminal.
+
+2. Run the following script, replacing the placeholders with your actual file paths and desired output filename:
+    ```sh
+    python run.py <input_filepath> <output_directory> <output_filename>
+    ```
+
+   - `<input_filepath>`: Path to the input GNSS log file (e.g., `Data/gnss_log_2024_04_13_19_53_33.txt`).
+   - `<output_directory>`: Directory where the output files will be saved.
+   - `<output_filename>`: Name of the output KML file (without extension).
+
+### Example
+
+```sh
+python run.py /Users/user/PycharmProjects/Autonomous_Robots_Ex0/Data/gnss_log_2024_04_13_19_53_33.txt /Users/user/PycharmProjects/Autonomous_Robots_Ex0 output
+```
+׳׳
+
+## Project Structure
+run.py: Main script to execute the GNSS processing.
+GnssToCsv.py: Contains functions to parse and process GNSS log data.
+solution.py: Implements the positioning algorithm and KML export functionality.
+
+## Output
+The generated KML file can be loaded into map applications like Google Earth to visualize the locations of the GNSS receiver based on the processed data.
