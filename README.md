@@ -38,9 +38,9 @@ python run.py /Users/user/PycharmProjects/Autonomous_Robots_Ex0/Data/gnss_log_20
 ׳׳
 
 ## Project Structure
-run.py: Main script to execute the GNSS processing.
-GnssToCsv.py: Contains functions to parse and process GNSS log data.
-solution.py: Implements the positioning algorithm and KML export functionality.
+    run.py: Main script to execute the GNSS processing.
+    GnssToCsv.py: Contains functions to parse and process GNSS log data.
+    solution.py: Implements the positioning algorithm and KML export functionality.
 
 ## Output
 The generated KML file can be loaded into map applications like Google Earth to visualize the locations of the GNSS receiver based on the processed data.
