@@ -1,4 +1,3 @@
-
 import os
 import csv
 from datetime import datetime, timezone, timedelta
@@ -61,7 +60,6 @@ def preprocess_measurements(measurements):
 
     measurements['PrM'] = LIGHTSPEED * measurements['prSeconds']
     measurements['PrSigmaM'] = LIGHTSPEED * 1e-9 * measurements['ReceivedSvTimeUncertaintyNanos']
-
     return measurements
 
 
@@ -123,6 +121,8 @@ def calculate_satellite_position(ephemeris, transmit_time):
 
 
 def parse_gnss_log(input_filepath):
+    columns_to_keep = ['UnixTime', 'SvName', 'Sat.X', 'Sat.Y', 'Sat.Z', 'Pseudo-Range', 'Cn0DbHz']
+    rename_columns = {'UnixTime': 'GPS time', 'SvName': 'SatPRN (ID)', 'Cn0DbHz': 'CN0'}
     unparsed_measurements = read_data(input_filepath)
     measurements = preprocess_measurements(unparsed_measurements)
     manager = EphemerisManager("data")
@@ -148,7 +148,7 @@ def parse_gnss_log(input_filepath):
 
             for sv in one_epoch.index:
                 csv_output.append({
-                    "GPS Time": timestamp.isoformat(),
+                    "GPS time": timestamp.isoformat(),
                     "SatPRN (ID)": sv,
                     "Sat.X": sv_position.at[sv, 'x_k'] if sv in sv_position.index else np.nan,
                     "Sat.Y": sv_position.at[sv, 'y_k'] if sv in sv_position.index else np.nan,
@@ -158,16 +158,7 @@ def parse_gnss_log(input_filepath):
                 })
 
     csv_df = pd.DataFrame(csv_output)
-    output_filename = os.path.splitext(os.path.basename(input_filepath))[0] + "_output.csv"
-    csv_df.to_csv(output_filename, index=False)
-
-def main():
-    # Example usage:
-    input_filepath = "Data/gnss_log_2024_04_13_19_51_17.txt"
-    print("Input File Path:", input_filepath)
-    parse_gnss_log(input_filepath)
+    return csv_df
 
 
-if __name__ == '__main__':
-    main()
-
+#
