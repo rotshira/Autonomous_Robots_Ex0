@@ -70,7 +70,7 @@ python run.py /Users/user/PycharmProjects/Autonomous_Robots_Ex0/Data/gnss_log_20
 - A KML file (in the running_results folder) which can be loaded into a map applications like [Google Earth](https://earth.google.com) or [KMZView](https://kmzview.com/) to visualize the locations of the GNSS receiver based on the processed data.
 
 ## Output Example
-#### CSV file (Part of it)
+#### CSV file (Part of it, for the rest check out the running_results folder!)
 
 | GPS time                     | SatPRN (ID) | Sat.X            | Sat.Y           | Sat.Z           | Pseudo-Range  | CN0  |
 |-----------------------------|-------------|------------------|-----------------|-----------------|---------------|------|
